@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>숫자야구 (난이도 선택)</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; }
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    overflow-x:hidden;
+    color:#f3f3f3;
+    /* "타자석에서 투수를 바라보는" 느낌의 간단 SVG 배경 (외부 이미지 불필요) */
+    background:
+      radial-gradient(1200px 700px at 50% 15%, rgba(255,255,255,.10), rgba(0,0,0,0) 55%),
+      radial-gradient(900px 550px at 50% 85%, rgba(0,0,0,.55), rgba(0,0,0,0) 60%),
+      url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'>\
+  <defs>\
+    <linearGradient id='sky' x1='0' x2='0' y1='0' y2='1'>\
+      <stop offset='0' stop-color='%230a1733'/>\
+      <stop offset='1' stop-color='%23030812'/>\
+    </linearGradient>\
+    <radialGradient id='glow' cx='50%25' cy='20%25' r='70%25'>\
+      <stop offset='0' stop-color='%23ffffff' stop-opacity='0.12'/>\
+      <stop offset='1' stop-color='%23ffffff' stop-opacity='0'/>\
+    </radialGradient>\
+    <linearGradient id='grass' x1='0' x2='0' y1='0' y2='1'>\
+      <stop offset='0' stop-color='%231a6b35'/>\
+      <stop offset='1' stop-color='%230a3a1c'/>\
+    </linearGradient>\
+    <linearGradient id='dirt' x1='0' x2='0' y1='0' y2='1'>\
+      <stop offset='0' stop-color='%238a5a2b'/>\
+      <stop offset='1' stop-color='%2352371f'/>\
+    </linearGradient>\
+  </defs>\
+  <rect width='1600' height='900' fill='url(%23sky)'/>\
+  <rect width='1600' height='900' fill='url(%23glow)'/>\
+  <!-- 관중석(양측) -->\
+  <path d='M0 220 L520 360 L520 520 L0 900 Z' fill='%23060b14' opacity='0.95'/>\
+  <path d='M1600 220 L1080 360 L1080 520 L1600 900 Z' fill='%23060b14' opacity='0.95'/>\
+  <!-- 조명 타워 느낌 -->\
+  <g opacity='0.25'>\
+    <rect x='130' y='110' width='18' height='170' fill='%23cfd6ff'/>\
+    <rect x='1450' y='110' width='18' height='170' fill='%23cfd6ff'/>\
+    <circle cx='139' cy='105' r='26' fill='%23cfd6ff' opacity='0.55'/>\
+    <circle cx='1459' cy='105' r='26' fill='%23cfd6ff' opacity='0.55'/>\
+  </g>\
+  <!-- 필드(원근) -->\
+  <path d='M120 560 Q800 360 1480 560 L1600 900 L0 900 Z' fill='url(%23grass)'/>\
+  <!-- 내야 흙 -->\
+  <path d='M520 650 Q800 520 1080 650 Q800 740 520 650 Z' fill='url(%23dirt)' opacity='0.95'/>\
+  <!-- 베이스 라인(원근) -->\
+  <path d='M800 720 L800 560' stroke='%23f2f2f2' stroke-opacity='0.35' stroke-width='4'/>\
+  <path d='M720 660 L800 560 L880 660' fill='none' stroke='%23f2f2f2' stroke-opacity='0.30' stroke-width='4'/>\
+  <!-- 홈플레이트(타자석 시점 근처) -->\
+  <path d='M790 770 L810 770 L820 786 L800 802 L780 786 Z' fill='%23f2f2f2' opacity='0.55'/>\
+  <!-- 투수 마운드 -->\
+  <ellipse cx='800' cy='600' rx='46' ry='18' fill='%23cfae8a' opacity='0.65'/>\
+  <!-- 희미한 네트 -->\
+  <g opacity='0.12'>\
+    <path d='M0 520 Q800 420 1600 520' stroke='%23ffffff' stroke-width='2'/>\
+    <path d='M0 560 Q800 460 1600 560' stroke='%23ffffff' stroke-width='2'/>\
+    <path d='M0 600 Q800 500 1600 600' stroke='%23ffffff' stroke-width='2'/>\
+  </g>\
+</svg>");
+    background-size: cover;
+    background-position: center;
+  }
+
+  .wrap{
+    max-width: 860px;
+    margin: 28px auto 60px;
+    padding: 18px;
+  }
+
+  .glass{
+    background: rgba(10, 12, 18, 0.68);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    box-shadow: 0 14px 60px rgba(0,0,0,0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  h1{ margin: 0 0 10px; font-size: 28px; letter-spacing: 0.02em; }
+  p{ margin: 8px 0; color: rgba(255,255,255,0.85); line-height: 1.55; }
+
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .space{ justify-content: space-between; }
+
+  .btn{
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    cursor:pointer;
+    font-size: 16px;
+  }
+  .btn:hover{ background: rgba(255,255,255,0.12); }
+
+  .btn.primary{
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.24);
+    font-weight: 700;
+  }
+
+  .select{
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.25);
+    color:#fff;
+    font-size: 15px;
+  }
+
+  .input{
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.25);
+    color:#fff;
+    font-size: 18px;
+    width: 170px;
+    letter-spacing: 0.22em;
+  }
+  .hint{ font-size: 13px; color: rgba(255,255,255,0.72); margin-top: 6px; }
+
+  .panel{ padding: 16px; }
+
+  .status{
+    margin-top: 10px;
+    font-weight: 800;
+    font-size: 16px;
+  }
+  .status.win{ color: #7dff9c; }
+  .status.lose{ color: #ff7676; }
+  .muted{ color: rgba(255,255,255,0.72); font-weight: 600; }
+
+  table{ width:100%; border-collapse: collapse; margin-top: 14px; }
+  th, td{ padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.10); text-align: left; }
+  th{ font-size: 13px; color: rgba(255,255,255,0.70); }
+
+  #gameArea{ display:none; }
+  #startScreen{ text-align:center; padding: 18px; }
+
+  /* 승리 애니메이션 캔버스 오버레이 */
+  #fxLayer{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    display:none;
+  }
+</style>
+</head>
+
+<body>
+<canvas id="fxLayer"></canvas>
+
+<div class="wrap">
+  <!-- 시작 화면 -->
+  <div id="startScreen" class="glass panel">
+    <h1>⚾ 숫자야구</h1>
+    <p>
+      규칙: 같은 자리 같은 숫자 = <b>스트라이크</b>, 다른 자리 같은 숫자 = <b>볼</b>, 정답에 아예 없는 숫자 개수 = <b>아웃</b><br/>
+      ※ 0~9 사용 가능, <b>중복 없음</b>, 입력은 자릿수 고정(앞자리에 0 가능)
+    </p>
+
+    <div class="row" style="justify-content:center; margin-top:14px;">
+      <label class="muted">난이도</label>
+      <select id="difficulty" class="select">
+        <option value="easy">쉬움 (3자리 / 20회)</option>
+        <option value="normal" selected>보통 (4자리 / 10회)</option>
+        <option value="hard">어려움 (4자리 / 5회)</option>
+      </select>
+    </div>
+
+    <div style="margin-top:18px;">
+      <button class="btn primary" id="startBtn">숫자야구 START!</button>
+    </div>
+  </div>
+
+  <!-- 게임 화면 -->
+  <div id="gameArea" class="glass panel">
+    <div class="row space">
+      <h1 style="margin:0;">⚾ 숫자야구</h1>
+      <div class="row">
+        <span class="muted" id="modeLabel"></span>
+        <button class="btn" id="restartBtn">새 게임</button>
+        <button class="btn" id="backBtn">난이도 선택</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <input id="guess" class="input" inputmode="numeric" autocomplete="off" />
+      <button class="btn primary" id="submitBtn">확인</button>
+      <span class="muted">시도: <span id="tryCount">0</span> / <span id="tryLimit">0</span></span>
+    </div>
+    <div class="hint" id="ruleHint"></div>
+
+    <div class="status" id="status">게임을 시작했습니다. 숫자를 입력하세요.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:80px;">#</th>
+          <th style="width:140px;">입력</th>
+          <th>결과</th>
+        </tr>
+      </thead>
+      <tbody id="log"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================
+   난이도 설정
+========================= */
+const MODES = {
+  easy:   { length: 3, maxTry: 20, label: "쉬움 · 3자리 · 20회" },
+  normal: { length: 4, maxTry: 10, label: "보통 · 4자리 · 10회" },
+  hard:   { length: 4, maxTry:  5, label: "어려움 · 4자리 · 5회" },
+};
+
+let modeKey = "normal";
+let LENGTH = MODES[modeKey].length;
+let MAX_TRY = MODES[modeKey].maxTry;
+
+let answer = [];
+let tries = 0;
+let gameOver = true;
+
+/* =========================
+   DOM
+========================= */
+const $startScreen = document.getElementById("startScreen");
+const $gameArea = document.getElementById("gameArea");
+
+const $difficulty = document.getElementById("difficulty");
+const $startBtn = document.getElementById("startBtn");
+
+const $modeLabel = document.getElementById("modeLabel");
+const $restartBtn = document.getElementById("restartBtn");
+const $backBtn = document.getElementById("backBtn");
+
+const $guess = document.getElementById("guess");
+const $submitBtn = document.getElementById("submitBtn");
+
+const $status = document.getElementById("status");
+const $tryCount = document.getElementById("tryCount");
+const $tryLimit = document.getElementById("tryLimit");
+const $ruleHint = document.getElementById("ruleHint");
+const $log = document.getElementById("log");
+
+/* =========================
+   정답 생성 (0~9, 중복 없음)
+========================= */
+function generateAnswer(len){
+  const nums = [...Array(10).keys()]; // 0~9
+  for(let i=nums.length-1;i>0;i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  return nums.slice(0, len);
+}
+
+/* =========================
+   UI helpers
+========================= */
+function setStatus(msg, cls=""){
+  $status.className = "status " + cls;
+  $status.textContent = msg;
+}
+function setStatusHTML(html, cls=""){
+  $status.className = "status " + cls;
+  $status.innerHTML = html;
+}
+function resetLog(){
+  $log.innerHTML = "";
+}
+function prependLogRow(n, guessStr, resultStr){
+  $log.insertAdjacentHTML("afterbegin",
+    `<tr><td>${n}</td><td>${guessStr}</td><td>${resultStr}</td></tr>`
+  );
+}
+
+/* =========================
+   화면 전환
+========================= */
+function showStart(){
+  $gameArea.style.display = "none";
+  $startScreen.style.display = "block";
+  gameOver = true;
+}
+function showGame(){
+  $startScreen.style.display = "none";
+  $gameArea.style.display = "block";
+}
+
+/* =========================
+   게임 시작
+========================= */
+function startGame(selectedModeKey){
+  modeKey = selectedModeKey;
+  LENGTH = MODES[modeKey].length;
+  MAX_TRY = MODES[modeKey].maxTry;
+
+  answer = generateAnswer(LENGTH);
+  tries = 0;
+  gameOver = false;
+
+  showGame();
+
+  $modeLabel.textContent = MODES[modeKey].label;
+  $tryCount.textContent = "0";
+  $tryLimit.textContent = String(MAX_TRY);
+
+  $guess.value = "";
+  $guess.maxLength = LENGTH;
+  $guess.placeholder = LENGTH === 3 ? "예: 507" : "예: 5072";
+
+  resetLog();
+  setStatus("게임을 시작했습니다. 숫자를 입력하세요.");
+
+  $ruleHint.textContent =
+    `규칙: ${LENGTH}자리(0~9), 중복 없음 · 결과는 S(스트라이크) B(볼) O(아웃)`;
+
+  $guess.focus();
+
+  // 디버그 필요 시:
+  // console.log("정답:", answer.join(""));
+}
+
+/* =========================
+   판정: S / B / O
+   - O(아웃) = 정답에 없는 숫자 개수
+========================= */
+function judge(inputArr){
+  let strike = 0, ball = 0, out = 0;
+  for(let i=0;i<LENGTH;i++){
+    if(inputArr[i] === answer[i]) strike++;
+    else if(answer.includes(inputArr[i])) ball++;
+    else out++;
+  }
+  return { strike, ball, out };
+}
+
+/* =========================
+   입력 검증
+========================= */
+function parseGuess(str){
+  const s = (str || "").trim();
+  const re = new RegExp("^\\d{" + LENGTH + "}$");
+  if(!re.test(s)) return { ok:false, reason:`${LENGTH}자리 숫자를 입력하세요.` };
+
+  const arr = [...s].map(Number);
+  if(new Set(arr).size !== LENGTH) return { ok:false, reason:"중복 숫자는 사용할 수 없습니다." };
+
+  return { ok:true, arr, s };
+}
+
+/* =========================
+   제출
+========================= */
+function submit(){
+  if(gameOver) return;
+
+  const parsed = parseGuess($guess.value);
+  if(!parsed.ok){
+    setStatus(parsed.reason, "lose");
+    $guess.focus();
+    $guess.select();
+    return;
+  }
+
+  tries++;
+  $tryCount.textContent = String(tries);
+
+  const { strike, ball, out } = judge(parsed.arr);
+  const resultStr = `${strike}S ${ball}B ${out}O`;
+
+  prependLogRow(tries, parsed.s, resultStr);
+
+  if(strike === LENGTH){
+    gameOver = true;
+    setStatusHTML(`🎉 정답! <b>${answer.join("")}</b> · ${tries}번 만에 성공`, "win");
+    playHitEffect(); // 승리 효과
+  } else if(tries >= MAX_TRY){
+    gameOver = true;
+    setStatusHTML(`❌ 실패! 정답: <b>${answer.join("")}</b>`, "lose");
+  } else {
+    setStatus(`결과: ${resultStr} — 계속 도전하세요.`);
+  }
+
+  $guess.value = "";
+  $guess.focus();
+}
+
+/* =========================
+   이벤트 바인딩
+========================= */
+$startBtn.addEventListener("click", () => startGame($difficulty.value));
+$restartBtn.addEventListener("click", () => startGame(modeKey));
+$backBtn.addEventListener("click", showStart);
+
+$submitBtn.addEventListener("click", submit);
+$guess.addEventListener("keydown", (e) => { if(e.key === "Enter") submit(); });
+
+// UX: 숫자만, 최대 LENGTH
+$guess.addEventListener("input", () => {
+  $guess.value = $guess.value.replace(/[^\d]/g, "").slice(0, LENGTH);
+});
+
+/* =========================
+   승리 이펙트: 배트 스윙 + 공 비행(캔버스)
+   - 간단한 도형 애니메이션 (외부 리소스 없음)
+========================= */
+const fx = document.getElementById("fxLayer");
+const ctx = fx.getContext("2d");
+
+function resizeFx(){
+  fx.width = window.innerWidth * devicePixelRatio;
+  fx.height = window.innerHeight * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+window.addEventListener("resize", resizeFx);
+resizeFx();
+
+function playHitEffect(){
+  fx.style.display = "block";
+
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  // 시작 위치(배트/공): 화면 하단 중앙 약간 오른쪽 (타자 위치)
+  const batBase = { x: W*0.58, y: H*0.78 };
+  const ball0   = { x: W*0.55, y: H*0.72 };
+
+  // 목표(공이 날아가는 방향): 좌상단 관중석 방향
+  const target  = { x: W*0.18, y: H*0.22 };
+
+  let t0 = performance.now();
+  const dur = 1300; // ms
+
+  // 파티클(스파크)
+  const sparks = Array.from({length: 20}, () => ({
+    x: ball0.x, y: ball0.y,
+    vx: (Math.random()*2-1)*250,
+    vy: (Math.random()*-1)*280,
+    life: 0.6 + Math.random()*0.4
+  }));
+
+  function drawBat(progress){
+    // 배트: 갈색 라인+손잡이, 회전 스윙
+    const swing = -1.0 + 1.8 * Math.min(1, progress*1.3); // -1rad -> +0.8rad
+    const len = Math.min(W,H)*0.18;
+
+    ctx.save();
+    ctx.translate(batBase.x, batBase.y);
+    ctx.rotate(swing);
+
+    // 배트 몸통
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = "rgba(210,170,120,0.92)";
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(-len, -len*0.25);
+    ctx.stroke();
+
+    // 손잡이
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = "rgba(70,40,20,0.95)";
+    ctx.beginPath();
+    ctx.moveTo(10,10);
+    ctx.lineTo(-25, 35);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawBall(x,y,scale,trail){
+    // 트레일
+    if(trail){
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(trail.x1, trail.y1);
+      ctx.lineTo(trail.x2, trail.y2);
+      ctx.stroke();
+    }
+
+    // 공
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "rgba(245,245,245,0.95)";
+    ctx.beginPath();
+    ctx.arc(0,0,10,0,Math.PI*2);
+    ctx.fill();
+
+    // 실밥
+    ctx.strokeStyle = "rgba(210,70,70,0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(-2,1,7, -0.2, 1.0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(2,-1,7, 2.1, 3.3);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawText(progress){
+    const a = Math.max(0, Math.min(1, (progress-0.2)/0.5));
+    ctx.save();
+    ctx.globalAlpha = 0.9*a;
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = "800 34px system-ui, sans-serif";
+    ctx.fillText("HIT!", W*0.07, H*0.12);
+    ctx.restore();
+  }
+
+  function step(now){
+    const elapsed = now - t0;
+    const p = Math.min(1, elapsed / dur);
+
+    ctx.clearRect(0,0,W,H);
+
+    // 약간의 화면 비네팅
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillRect(0,0,W,H);
+
+    // 배트(초반 스윙)
+    drawBat(p);
+
+    // 공 궤적: 2차 베지어로 "훅" 느낌
+    const cx = (ball0.x + target.x)/2 + W*0.08; // 컨트롤
+    const cy = (ball0.y + target.y)/2 - H*0.20;
+
+    // 베지어 위치
+    const x = (1-p)*(1-p)*ball0.x + 2*(1-p)*p*cx + p*p*target.x;
+    const y = (1-p)*(1-p)*ball0.y + 2*(1-p)*p*cy + p*p*target.y;
+
+    // 트레일: 직전 프레임 근사
+    const p2 = Math.max(0, p-0.02);
+    const x2 = (1-p2)*(1-p2)*ball0.x + 2*(1-p2)*p2*cx + p2*p2*target.x;
+    const y2 = (1-p2)*(1-p2)*ball0.y + 2*(1-p2)*p2*cy + p2*p2*target.y;
+
+    // 스케일: 멀어지면서 작아짐
+    const scale = 1 - 0.65*p;
+
+    // 충돌 순간(초반 25%)에 스파크
+    if(p < 0.35){
+      const spP = Math.max(0, (p-0.08)/0.22);
+      const alpha = 1 - spP;
+      ctx.save();
+      ctx.globalAlpha = 0.9*alpha;
+      ctx.strokeStyle = "rgba(255,230,170,0.95)";
+      ctx.lineWidth = 2;
+      for(const s of sparks){
+        ctx.beginPath();
+        ctx.moveTo(ball0.x, ball0.y);
+        ctx.lineTo(ball0.x + s.vx*spP*0.08, ball0.y + s.vy*spP*0.08);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    drawBall(x,y,scale, {x1:x2, y1:y2, x2:x, y2:y});
+    drawText(p);
+
+    if(p < 1){
+      requestAnimationFrame(step);
+    } else {
+      // 마무리 페이드아웃
+      const fadeStart = performance.now();
+      const fadeDur = 350;
+      function fade(n2){
+        const fp = Math.min(1, (n2 - fadeStart)/fadeDur);
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle = `rgba(0,0,0,${0.18*(1-fp)})`;
+        ctx.fillRect(0,0,W,H);
+        if(fp < 1) requestAnimationFrame(fade);
+        else fx.style.display = "none";
+      }
+      requestAnimationFrame(fade);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+// 초기 화면은 시작 화면
+showStart();
+</script>
+</body>
+</html>
